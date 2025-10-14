@@ -56,15 +56,12 @@ Password: adminpass
 You can also register new accounts via the “Create Account” button in the GUI.
 ```
 
-## File Structure
-Bank_App/
-│
-├── BankApp.java          # Main Java file with all GUI and banking logic
-├── Account.java          # Stores account details and transaction history
-├── Customer.java         # Handles customer interactions
-├── Admin.java            # Handles admin operations
-├── AccountManager.java   # Manages accounts and transactions
-├── Transaction.java      # Represents individual transactions
-├── PasswordUtil.java     # Password hashing and verification
-├── bank_data.ser         # Serialized data file (auto-generated)
-├── README.md             # Project documentation
+## Files
+- `BankApp`        : Main driver class that initializes GUI and program flow
+- `Account`        : Stores user information, balance, transaction history, and login state
+- `Customer`       : Handles customer menu and actions (deposit, withdraw, transfer, statements)
+- `Admin`          : Handles admin menu and operations (list accounts, unlock, delete)
+- `AccountManager` : Manages all accounts, transfers, and file persistence
+- `Transaction`    : Represents a transaction with timestamp, type, amount, and note
+- `PasswordUtil`   : Generates salts, hashes passwords, and verifies login credentials
+
