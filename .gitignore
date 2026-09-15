@@ -1,0 +1,22 @@
+# Compiled Java class files
+*.class
+
+# Serialized bank database
+*.ser
+
+# College project report documents & presentations
+*.pdf
+*.docx
+*.pptx
+
+# IDE & Editor settings
+.idea/
+*.iml
+.vscode/
+.settings/
+.project
+.classpath
+
+# OS generated files
+Thumbs.db
+.DS_Store
