@@ -14,4 +14,11 @@ public class PasswordUtil {
         new SecureRandom().nextBytes(salt);
         return salt;
     }
+
+    public static byte[] hashPassword(final char[] password, final byte[] salt)
+            throws NoSuchAlgorithmException, InvalidKeySpecException {
+        PBEKeySpec spec = new PBEKeySpec(password, salt, ITERATIONS, KEY_LENGTH);
+        SecretKeyFactory skf = SecretKeyFactory.getInstance("PBKDF2WithHmacSHA256");
+        return skf.generateSecret(spec).getEncoded();
+    }
 }
