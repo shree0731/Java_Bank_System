@@ -1,3 +1,4 @@
+
 import java.security.NoSuchAlgorithmException;
 import java.security.SecureRandom;
 import java.security.spec.InvalidKeySpecException;
@@ -20,5 +21,11 @@ public class PasswordUtil {
         PBEKeySpec spec = new PBEKeySpec(password, salt, ITERATIONS, KEY_LENGTH);
         SecretKeyFactory skf = SecretKeyFactory.getInstance("PBKDF2WithHmacSHA256");
         return skf.generateSecret(spec).getEncoded();
+    }
+
+    public static boolean verifyPassword(char[] attemptedPassword, byte[] salt, byte[] expectedHash)
+            throws NoSuchAlgorithmException, InvalidKeySpecException {
+        byte[] attemptedHash = hashPassword(attemptedPassword, salt);
+        return Arrays.equals(attemptedHash, expectedHash);
     }
 }
