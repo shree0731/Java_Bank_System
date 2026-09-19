@@ -19,4 +19,10 @@ public class Transaction implements Serializable {
         this.amount = amount;
         this.note = note;
     }
+
+    @Override
+    public String toString() {
+        return String.format("%s | %s | %s | %s | %s",
+                id, timestamp, type, (amount == null ? "-" : amount.toPlainString()), note);
+    }
 }
