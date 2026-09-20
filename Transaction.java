@@ -1,3 +1,4 @@
+
 import java.io.Serializable;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
@@ -24,5 +25,10 @@ public class Transaction implements Serializable {
     public String toString() {
         return String.format("%s | %s | %s | %s | %s",
                 id, timestamp, type, (amount == null ? "-" : amount.toPlainString()), note);
+    }
+
+    public String toCSV() {
+        String amt = (amount == null ? "" : amount.toPlainString());
+        return String.join(",", id, timestamp, type, amt, "\"" + note.replace("\"", "\"\"") + "\"");
     }
 }
