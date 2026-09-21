@@ -1,0 +1,28 @@
+import java.io.Serializable;
+import java.math.BigDecimal;
+import java.util.ArrayList;
+import java.util.List;
+
+public class Account implements Serializable {
+    private static final long serialVersionUID = 1L;
+
+    private final String accountNumber;
+    private final String holderName;
+    private byte[] passwordHash;
+    private byte[] salt;
+    private BigDecimal balance;
+
+    public Account(String accountNumber, String holderName, byte[] passwordHash, byte[] salt, BigDecimal balance) {
+        this.accountNumber = accountNumber;
+        this.holderName = holderName;
+        this.passwordHash = passwordHash;
+        this.salt = salt;
+        this.balance = balance;
+    }
+
+    public String getAccountNumber() { return accountNumber; }
+    public String getHolderName() { return holderName; }
+    public BigDecimal getBalance() { return balance; }
+    public byte[] getSalt() { return salt; }
+    public byte[] getPasswordHash() { return passwordHash; }
+}
