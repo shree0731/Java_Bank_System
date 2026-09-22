@@ -25,4 +25,10 @@ public class Account implements Serializable {
     public BigDecimal getBalance() { return balance; }
     public byte[] getSalt() { return salt; }
     public byte[] getPasswordHash() { return passwordHash; }
+
+    public boolean deposit(BigDecimal amt) {
+        if (amt == null || amt.compareTo(BigDecimal.ZERO) <= 0) return false;
+        balance = balance.add(amt);
+        return true;
+    }
 }
