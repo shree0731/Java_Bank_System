@@ -31,4 +31,11 @@ public class Account implements Serializable {
         balance = balance.add(amt);
         return true;
     }
+
+    public boolean withdraw(BigDecimal amt) {
+        if (amt == null || amt.compareTo(BigDecimal.ZERO) <= 0) return false;
+        if (balance.compareTo(amt) < 0) return false;
+        balance = balance.subtract(amt);
+        return true;
+    }
 }
