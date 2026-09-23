@@ -11,6 +11,7 @@ public class Account implements Serializable {
     private byte[] passwordHash;
     private byte[] salt;
     private BigDecimal balance;
+    private final List<Transaction> history = new ArrayList<>();
 
     public Account(String accountNumber, String holderName, byte[] passwordHash, byte[] salt, BigDecimal balance) {
         this.accountNumber = accountNumber;
@@ -18,6 +19,7 @@ public class Account implements Serializable {
         this.passwordHash = passwordHash;
         this.salt = salt;
         this.balance = balance;
+        history.add(new Transaction("OPEN", balance, "Account opened"));
     }
 
     public String getAccountNumber() { return accountNumber; }
@@ -29,6 +31,7 @@ public class Account implements Serializable {
     public boolean deposit(BigDecimal amt) {
         if (amt == null || amt.compareTo(BigDecimal.ZERO) <= 0) return false;
         balance = balance.add(amt);
+        history.add(new Transaction("DEPOSIT", amt, "Deposit"));
         return true;
     }
 
@@ -36,6 +39,7 @@ public class Account implements Serializable {
         if (amt == null || amt.compareTo(BigDecimal.ZERO) <= 0) return false;
         if (balance.compareTo(amt) < 0) return false;
         balance = balance.subtract(amt);
+        history.add(new Transaction("WITHDRAW", amt, "Withdraw"));
         return true;
     }
 
@@ -43,10 +47,16 @@ public class Account implements Serializable {
         if (amt == null || amt.compareTo(BigDecimal.ZERO) <= 0) return false;
         if (balance.compareTo(amt) < 0) return false;
         balance = balance.subtract(amt);
+        history.add(new Transaction("TRANSFER_OUT", amt, "To: " + toAcc));
         return true;
     }
 
     public void addTransferIn(BigDecimal amt, String fromAcc) {
         balance = balance.add(amt);
+        history.add(new Transaction("TRANSFER_IN", amt, "From: " + fromAcc));
+    }
+
+    public List<Transaction> getHistory() {
+        return history;
     }
 }
