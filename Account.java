@@ -38,4 +38,15 @@ public class Account implements Serializable {
         balance = balance.subtract(amt);
         return true;
     }
+
+    public boolean transferOut(BigDecimal amt, String toAcc) {
+        if (amt == null || amt.compareTo(BigDecimal.ZERO) <= 0) return false;
+        if (balance.compareTo(amt) < 0) return false;
+        balance = balance.subtract(amt);
+        return true;
+    }
+
+    public void addTransferIn(BigDecimal amt, String fromAcc) {
+        balance = balance.add(amt);
+    }
 }
