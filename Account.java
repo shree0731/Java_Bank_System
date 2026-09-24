@@ -12,6 +12,8 @@ public class Account implements Serializable {
     private byte[] salt;
     private BigDecimal balance;
     private final List<Transaction> history = new ArrayList<>();
+    private int failedLogins = 0;
+    private boolean locked = false;
 
     public Account(String accountNumber, String holderName, byte[] passwordHash, byte[] salt, BigDecimal balance) {
         this.accountNumber = accountNumber;
@@ -59,4 +61,12 @@ public class Account implements Serializable {
     public synchronized List<Transaction> getHistory() {
         return history;
     }
+
+    public synchronized int getFailedLogins() { return failedLogins; }
+    public synchronized void resetFailedLogins() { failedLogins = 0; }
+    public synchronized void incrementFailedLogins() {
+        failedLogins++;
+        if (failedLogins >= 3) locked = true;
+    }
+    public synchronized boolean isLocked() { return locked; }
 }
