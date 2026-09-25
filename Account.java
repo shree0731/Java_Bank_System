@@ -69,4 +69,12 @@ public class Account implements Serializable {
         if (failedLogins >= 3) locked = true;
     }
     public synchronized boolean isLocked() { return locked; }
+
+    public synchronized void unlock() { locked = false; failedLogins = 0; }
+
+    public synchronized void setPasswordHashAndSalt(byte[] hash, byte[] salt) {
+        this.passwordHash = hash;
+        this.salt = salt;
+        history.add(new Transaction("PW_CHANGE", null, "Password changed"));
+    }
 }
