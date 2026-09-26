@@ -1,3 +1,4 @@
+
 import java.io.Serializable;
 import java.math.BigDecimal;
 import java.util.ArrayList;
@@ -59,7 +60,7 @@ public class Account implements Serializable {
     }
 
     public synchronized List<Transaction> getHistory() {
-        return history;
+        return new ArrayList<>(history);
     }
 
     public synchronized int getFailedLogins() { return failedLogins; }
@@ -69,7 +70,6 @@ public class Account implements Serializable {
         if (failedLogins >= 3) locked = true;
     }
     public synchronized boolean isLocked() { return locked; }
-
     public synchronized void unlock() { locked = false; failedLogins = 0; }
 
     public synchronized void setPasswordHashAndSalt(byte[] hash, byte[] salt) {
