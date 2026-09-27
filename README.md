@@ -1,7 +1,7 @@
 #  BankApp – Java GUI Banking System
 
 ##  Overview
-**BankApp** is a simple Java Swing–based GUI application that simulates a digital banking system.  
+**BankApp** is a simple Java Swing–based GUI application that simulates a digital banking system.  We used Java swing but using JavaFX is better.
 It allows users to **create accounts, log in securely, and perform basic banking operations** such as deposits, withdrawals, and balance inquiries — all within an intuitive graphical interface.
 
 ---
