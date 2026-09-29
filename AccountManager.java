@@ -16,6 +16,16 @@ public class AccountManager implements Serializable {
         return new HashMap<>(accounts);
     }
 
+    public synchronized String createAccount(String name, String password, BigDecimal balance)
+            throws Exception {
+        String accNum = String.valueOf(nextAccountNumber.getAndIncrement());
+        byte[] salt = PasswordUtil.generateSalt();
+        byte[] hash = PasswordUtil.hashPassword(password.toCharArray(), salt);
+        Account acc = new Account(accNum, name, hash, salt, balance);
+        accounts.put(accNum, acc);
+        return accNum;
+    }
+
     public synchronized String nextAccountPeek() {
         return String.valueOf(nextAccountNumber.get());
     }
