@@ -29,4 +29,21 @@ public class AccountManager implements Serializable {
     public synchronized String nextAccountPeek() {
         return String.valueOf(nextAccountNumber.get());
     }
+
+    public boolean transfer(String fromAccNum, String toAccNum, BigDecimal amount) {
+        Account a1 = getAccount(fromAccNum);
+        Account a2 = getAccount(toAccNum);
+        if (a1 == null || a2 == null) return false;
+
+        Account first = (a1.getAccountNumber().compareTo(a2.getAccountNumber()) <= 0) ? a1 : a2;
+        Account second = (first == a1) ? a2 : a1;
+
+        synchronized (first) {
+            synchronized (second) {
+                if (!a1.transferOut(amount, toAccNum)) return false;
+                a2.addTransferIn(amount, fromAccNum);
+                return true;
+            }
+        }
+    }
 }
