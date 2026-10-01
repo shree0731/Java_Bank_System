@@ -46,4 +46,12 @@ public class AccountManager implements Serializable {
             }
         }
     }
+
+    public synchronized boolean deleteAccount(String accNum) {
+        return accounts.remove(accNum) != null;
+    }
+
+    public synchronized void addAccount(Account acc) {
+        accounts.put(acc.getAccountNumber(), acc);
+    }
 }
