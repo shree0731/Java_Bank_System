@@ -54,4 +54,19 @@ public class AccountManager implements Serializable {
     public synchronized void addAccount(Account acc) {
         accounts.put(acc.getAccountNumber(), acc);
     }
+
+    public synchronized int totalAccounts() {
+        int count = accounts.size();
+        if (accounts.containsKey("admin")) count--;
+        return count;
+    }
+
+    public synchronized BigDecimal totalFunds() {
+        BigDecimal sum = BigDecimal.ZERO;
+        for (Account a : accounts.values()) {
+            if ("admin".equals(a.getAccountNumber())) continue;
+            sum = sum.add(a.getBalance());
+        }
+        return sum;
+    }
 }
