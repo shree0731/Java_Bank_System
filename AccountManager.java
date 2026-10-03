@@ -69,4 +69,20 @@ public class AccountManager implements Serializable {
         }
         return sum;
     }
+
+    public synchronized void save(String filename) {
+        try (ObjectOutputStream oos = new ObjectOutputStream(new FileOutputStream(filename))) {
+            oos.writeObject(this);
+        } catch (IOException e) {
+            System.err.println("Could not save data: " + e.getMessage());
+        }
+    }
+
+    public static AccountManager load(String filename) {
+        try (ObjectInputStream ois = new ObjectInputStream(new FileInputStream(filename))) {
+            return (AccountManager) ois.readObject();
+        } catch (Exception e) {
+            return new AccountManager();
+        }
+    }
 }
