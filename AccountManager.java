@@ -1,3 +1,4 @@
+
 import java.io.*;
 import java.math.BigDecimal;
 import java.util.*;
@@ -26,8 +27,12 @@ public class AccountManager implements Serializable {
         return accNum;
     }
 
-    public synchronized String nextAccountPeek() {
-        return String.valueOf(nextAccountNumber.get());
+    public synchronized boolean deleteAccount(String accNum) {
+        return accounts.remove(accNum) != null;
+    }
+
+    public synchronized void addAccount(Account acc) {
+        accounts.put(acc.getAccountNumber(), acc);
     }
 
     public boolean transfer(String fromAccNum, String toAccNum, BigDecimal amount) {
@@ -47,14 +52,6 @@ public class AccountManager implements Serializable {
         }
     }
 
-    public synchronized boolean deleteAccount(String accNum) {
-        return accounts.remove(accNum) != null;
-    }
-
-    public synchronized void addAccount(Account acc) {
-        accounts.put(acc.getAccountNumber(), acc);
-    }
-
     public synchronized int totalAccounts() {
         int count = accounts.size();
         if (accounts.containsKey("admin")) count--;
@@ -68,6 +65,10 @@ public class AccountManager implements Serializable {
             sum = sum.add(a.getBalance());
         }
         return sum;
+    }
+
+    public synchronized String nextAccountPeek() {
+        return String.valueOf(nextAccountNumber.get());
     }
 
     public synchronized void save(String filename) {
