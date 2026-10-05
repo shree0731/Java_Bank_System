@@ -1,3 +1,4 @@
+// AccountManager.java - Core state manager handling accounts, deadlock prevention, and persistence
 
 import java.io.*;
 import java.math.BigDecimal;
