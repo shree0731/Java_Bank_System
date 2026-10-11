@@ -158,4 +158,54 @@ public class Customer {
         while (true) {
             System.out.print("Enter deposit amount (or 0 to cancel): ");
             String s = sc.nextLine().trim();
+            if (s.equalsIgnoreCase("0") || s.equalsIgnoreCase("c")) {
+                System.out.println("Deposit cancelled.");
+                return;
+            }
+            try {
+                BigDecimal amt = parseAmount(s);
+                if (amt.compareTo(BigDecimal.ZERO) <= 0) {
+                    System.out.println("Amount must be positive.");
+                    continue;
+                }
+                if (acc.deposit(amt)) {
+                    System.out.println("Deposit successful. New balance: " + acc.getBalance().toPlainString());
+                    manager.save(DATA_FILE);
+                    return;
+                } else {
+                    System.out.println("Invalid deposit amount.");
+                }
+            } catch (NumberFormatException e) {
+                System.out.println("Please enter a valid number (supports suffix k/K/m/M).");
+            }
+        }
+    }
+
+    private void withdrawFlow(Account acc) {
+        while (true) {
+            System.out.print("Enter withdrawal amount (or 0 to cancel): ");
+            String s = sc.nextLine().trim();
+            if (s.equalsIgnoreCase("0") || s.equalsIgnoreCase("c")) {
+                System.out.println("Withdrawal cancelled.");
+                return;
+            }
+            try {
+                BigDecimal amt = parseAmount(s);
+                if (amt.compareTo(BigDecimal.ZERO) <= 0) {
+                    System.out.println("Amount must be positive.");
+                    continue;
+                }
+                if (acc.withdraw(amt)) {
+                    System.out.println("Withdrawal successful. New balance: " + acc.getBalance().toPlainString());
+                    manager.save(DATA_FILE);
+                    return;
+                } else {
+                    System.out.println("Insufficient funds or invalid amount.");
+                }
+            } catch (NumberFormatException e) {
+                System.out.println("Please enter a valid number (supports suffix k/K/m/M).");
+            }
+        }
+    }
+
 }
