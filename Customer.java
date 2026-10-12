@@ -208,4 +208,44 @@ public class Customer {
         }
     }
 
+    private void transferFlow(Account acc) {
+        System.out.print("Enter target account number (or 0 to cancel): ");
+        String target = sc.nextLine().trim();
+        if (target.equalsIgnoreCase("0") || target.equalsIgnoreCase("c")) {
+            System.out.println("Transfer cancelled.");
+            return;
+        }
+        if (manager.getAccount(target) == null) {
+            System.out.println("Target account not found.");
+            return;
+        }
+        while (true) {
+            System.out.print("Enter amount to transfer (or 0 to cancel): ");
+            String s = sc.nextLine().trim();
+            if (s.equalsIgnoreCase("0") || s.equalsIgnoreCase("c")) {
+                System.out.println("Transfer cancelled.");
+                return;
+            }
+            try {
+                BigDecimal amt = parseAmount(s);
+                if (amt.compareTo(BigDecimal.ZERO) <= 0) {
+                    System.out.println("Amount must be positive.");
+                    continue;
+                }
+                System.out.print("Confirm transfer of " + amt.toPlainString() + " to " + target + " (Y/N): ");
+                String conf = sc.nextLine().trim();
+                if (!conf.equalsIgnoreCase("Y")) { System.out.println("Transfer cancelled."); return; }
+                boolean ok = manager.transfer(acc.getAccountNumber(), target, amt);
+                if (ok) {
+                    System.out.println("Transfer successful. New balance: " + acc.getBalance().toPlainString());
+                    manager.save(DATA_FILE);
+                    return;
+                } else {
+                    System.out.println("Transfer failed (insufficient funds or invalid amount).");
+                    return;
+                }
+            } catch (NumberFormatException e) {
+                System.out.println("Please enter a valid number (supports suffix k/K/m/M).");
+            }
+        }
 }
