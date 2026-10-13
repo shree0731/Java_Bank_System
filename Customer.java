@@ -248,4 +248,29 @@ public class Customer {
                 System.out.println("Please enter a valid number (supports suffix k/K/m/M).");
             }
         }
+    }
+
+    private void printMiniStatement(Account acc) {
+        System.out.println("Mini-statement for " + acc.getAccountNumber() + " (" + acc.getHolderName() + "):");
+        List<Transaction> hist = acc.getHistory();
+        int start = Math.max(0, hist.size() - 10);
+        for (int i = hist.size() - 1; i >= start; i--) {
+            System.out.println(hist.get(i));
+        }
+    }
+
+    private void exportCSV(Account acc) {
+        String filename = "statement_" + acc.getAccountNumber() + "_" + new SimpleDateFormat("yyyyMMddHHmmss").format(new Date()) + ".csv";
+        try (PrintWriter pw = new PrintWriter(new FileWriter(filename))) {
+            pw.println("TransactionID,Timestamp,Type,Amount,Note");
+            for (Transaction t : acc.getHistory()) pw.println(t.toCSV());
+            System.out.println("CSV exported to: " + filename);
+        } catch (IOException e) {
+            System.out.println("Failed to export CSV: " + e.getMessage());
+        }
+    }
+
+    private void changePasswordFlow(Account acc) {
+        System.out.print("Enter current password (or 0 to cancel): ");
+        String cur = sc.nextLine().trim();
 }
