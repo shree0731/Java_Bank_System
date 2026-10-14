@@ -273,4 +273,24 @@ public class Customer {
     private void changePasswordFlow(Account acc) {
         System.out.print("Enter current password (or 0 to cancel): ");
         String cur = sc.nextLine().trim();
+        if (cur.equals("0")) { System.out.println("Password change cancelled."); return; }
+        try {
+            boolean ok = PasswordUtil.verifyPassword(cur.toCharArray(), acc.getSalt(), acc.getPasswordHash());
+            if (!ok) { System.out.println("Current password incorrect."); return; }
+        } catch (Exception e) { System.out.println("Authentication error."); return; }
+
+        while (true) {
+            System.out.print("Enter new password (min 8 chars, includes digit and letter) or 0 to cancel: ");
+            String np = sc.nextLine().trim();
+            if (np.equals("0")) { System.out.println("Password change cancelled."); return; }
+            if (!isPasswordStrong(np)) {
+                System.out.println("Password too weak. Use at least 8 chars including letters and digits.");
+                continue;
+            }
+            System.out.print("Confirm new password: ");
+            String cp = sc.nextLine().trim();
+            if (!np.equals(cp)) {
+                System.out.println("Passwords do not match. Try again.");
+                continue;
+            }
 }
