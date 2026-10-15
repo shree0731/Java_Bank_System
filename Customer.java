@@ -293,4 +293,24 @@ public class Customer {
                 System.out.println("Passwords do not match. Try again.");
                 continue;
             }
+            try {
+                byte[] newSalt = PasswordUtil.generateSalt();
+                byte[] newHash = PasswordUtil.hashPassword(np.toCharArray(), newSalt);
+                acc.setPasswordHashAndSalt(newHash, newSalt);
+                manager.save(DATA_FILE);
+                System.out.println("Password changed successfully.");
+                return;
+            } catch (Exception e) {
+                System.out.println("Failed to set new password: " + e.getMessage());
+                return;
+            }
+        }
+    }
+
+    private BigDecimal parseAmount(String s) throws NumberFormatException {
+        if (s == null) throw new NumberFormatException("null");
+        s = s.trim().replace(",", "").toLowerCase();
+        if (s.endsWith("k") || s.endsWith("m")) {
+            char suffix = s.charAt(s.length() - 1);
+            String num = s.substring(0, s.length() - 1).trim();
 }
