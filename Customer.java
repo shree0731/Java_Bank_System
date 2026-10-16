@@ -313,4 +313,22 @@ public class Customer {
         if (s.endsWith("k") || s.endsWith("m")) {
             char suffix = s.charAt(s.length() - 1);
             String num = s.substring(0, s.length() - 1).trim();
+            BigDecimal base = new BigDecimal(num);
+            if (suffix == 'k') return base.multiply(new BigDecimal("1000"));
+            else return base.multiply(new BigDecimal("1000000"));
+        } else {
+            return new BigDecimal(s);
+        }
+    }
+
+    private boolean isPasswordStrong(String pwd) {
+        if (pwd == null) return false;
+        if (pwd.length() < 8) return false;
+        boolean hasDigit = false, hasLetter = false;
+        for (char c : pwd.toCharArray()) {
+            if (Character.isDigit(c)) hasDigit = true;
+            if (Character.isLetter(c)) hasLetter = true;
+        }
+        return hasDigit && hasLetter;
+    }
 }
