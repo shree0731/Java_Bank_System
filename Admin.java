@@ -48,5 +48,45 @@ public class Admin {
 
     private void adminMenu() {
         while (true) {
+            System.out.println("\nAdmin Menu:");
+            System.out.println("1. List Accounts");
+            System.out.println("2. Create Account (admin)");
+            System.out.println("3. Delete Account");
+            System.out.println("4. Unlock Account");
+            System.out.println("5. View Account Statement");
+            System.out.println("6. Admin Summary");
+            System.out.println("7. Logout");
+            System.out.print("Choice: ");
+            String ch = sc.nextLine().trim();
+            switch (ch) {
+                case "1": listAccounts(); break;
+                case "2": createAccountCLI(); break;
+                case "3": deleteAccountCLI(); break;
+                case "4": unlockAccountCLI(); break;
+                case "5": viewAccountStatementCLI(); break;
+                case "6": adminSummary(); break;
+                case "7":
+                    System.out.println("Admin logout.");
+                    manager.save(DATA_FILE);
+                    return;
+                default:
+                    System.out.println("Invalid choice."); break;
+            }
+        }
+    }
+
+    private void listAccounts() {
+        System.out.println("Accounts:");
+        Map<String, Account> all = manager.getAllAccounts();
+        for (Account a : all.values()) {
+            if ("admin".equals(a.getAccountNumber())) continue;
+            System.out.printf("- %s | %s | Balance: %s | Locked: %s\n",
+                    a.getAccountNumber(), a.getHolderName(), a.getBalance().toPlainString(), a.isLocked());
+        }
+    }
+
+    private void createAccountCLI() {
+        System.out.print("Enter holder name: ");
+        String name = sc.nextLine().trim();
     }
 }
