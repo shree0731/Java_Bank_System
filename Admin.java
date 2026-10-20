@@ -88,5 +88,75 @@ public class Admin {
     private void createAccountCLI() {
         System.out.print("Enter holder name: ");
         String name = sc.nextLine().trim();
+        if (name.isEmpty()) { System.out.println("Name cannot be empty."); return; }
+
+        String pwd;
+        while (true) {
+            System.out.print("Enter password (min 8 chars incl. letters & digits) or '0' to cancel: ");
+            pwd = sc.nextLine().trim();
+            if (pwd.equals("0")) { System.out.println("Account creation cancelled."); return; }
+            if (!isPasswordStrong(pwd)) {
+                System.out.println("Password too weak. Use at least 8 characters with letters and digits.");
+                continue;
+            }
+            System.out.print("Confirm password: ");
+            String cp = sc.nextLine().trim();
+            if (!pwd.equals(cp)) {
+                System.out.println("Passwords do not match. Try again.");
+                continue;
+            }
+            break;
+        }
+
+        while (true) {
+            System.out.print("Initial deposit amount (supports 20k, 1.5M) or 0 to cancel: ");
+            String s = sc.nextLine().trim();
+            if (s.equalsIgnoreCase("0") || s.equalsIgnoreCase("c")) {
+                System.out.println("Account creation cancelled.");
+                return;
+            }
+            try {
+                BigDecimal initial = parseAmount(s);
+                if (initial.compareTo(BigDecimal.ZERO) < 0) { System.out.println("Initial deposit cannot be negative."); continue; }
+                try {
+                    String accNum = manager.createAccount(name, pwd, initial);
+                    manager.save(DATA_FILE);
+                    System.out.println("Account created successfully. Account Number: " + accNum);
+                    return;
+                } catch (Exception e) {
+                    System.out.println("Account creation error: " + e.getMessage());
+                    return;
+                }
+            } catch (NumberFormatException e) {
+                System.out.println("Please enter a valid number for initial deposit (supports k/M).");
+            }
+        }
+    }
+
+    private void deleteAccountCLI() {
+        System.out.print("Enter account number to delete: ");
+        String acc = sc.nextLine().trim();
+        if (acc.equals("admin")) { System.out.println("Cannot delete admin."); return; }
+        boolean ok = manager.deleteAccount(acc);
+        if (ok) { System.out.println("Account deleted."); manager.save(DATA_FILE); }
+        else System.out.println("Account not found.");
+    }
+
+    private void unlockAccountCLI() {
+        System.out.print("Enter account number to unlock: ");
+        String acc = sc.nextLine().trim();
+        Account a = manager.getAccount(acc);
+        if (a == null) { System.out.println("Account not found."); return; }
+        a.unlock();
+        manager.save(DATA_FILE);
+        System.out.println("Account unlocked.");
+    }
+
+    private void viewAccountStatementCLI() {
+        System.out.print("Enter account number to view statement: ");
+        String acc = sc.nextLine().trim();
+        Account a = manager.getAccount(acc);
+        if (a == null) { System.out.println("Account not found."); return; }
+        System.out.println("Full statement for " + a.getAccountNumber() + " (" + a.getHolderName() + "):");
     }
 }
