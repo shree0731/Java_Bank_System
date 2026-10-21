@@ -158,5 +158,44 @@ public class Admin {
         Account a = manager.getAccount(acc);
         if (a == null) { System.out.println("Account not found."); return; }
         System.out.println("Full statement for " + a.getAccountNumber() + " (" + a.getHolderName() + "):");
+        for (Transaction t : a.getHistory()) System.out.println(t);
+    }
+
+    private void adminSummary() {
+        int total = manager.totalAccounts();
+        BigDecimal funds = manager.totalFunds();
+        System.out.println("Admin Summary:");
+        System.out.println("  Total customer accounts: " + total);
+        System.out.println("  Total funds across accounts: " + funds.toPlainString());
+        System.out.println("  Next available account number: " + manager.nextAccountPeek());
+    }
+
+    /* ---------- Helpers (small copies so Admin.java is self-contained) ---------- */
+
+    // parse amounts like "20000", "20k", "1.5M" into BigDecimal. Throws NumberFormatException on invalid input.
+    private BigDecimal parseAmount(String s) throws NumberFormatException {
+        if (s == null) throw new NumberFormatException("null");
+        s = s.trim().replace(",", "").toLowerCase();
+        if (s.endsWith("k") || s.endsWith("m")) {
+            char suffix = s.charAt(s.length() - 1);
+            String num = s.substring(0, s.length() - 1).trim();
+            BigDecimal base = new BigDecimal(num);
+            if (suffix == 'k') return base.multiply(new BigDecimal("1000"));
+            else return base.multiply(new BigDecimal("1000000"));
+        } else {
+            return new BigDecimal(s);
+        }
+    }
+
+    // simple password strength check (demo-level): min length + at least one digit and one letter
+    private boolean isPasswordStrong(String pwd) {
+        if (pwd == null) return false;
+        if (pwd.length() < 8) return false;
+        boolean hasDigit = false, hasLetter = false;
+        for (char c : pwd.toCharArray()) {
+            if (Character.isDigit(c)) hasDigit = true;
+            if (Character.isLetter(c)) hasLetter = true;
+        }
+        return hasDigit && hasLetter;
     }
 }
