@@ -158,4 +158,104 @@ public class BankApp {
                     int rem = Math.max(0, 3 - a.getFailedLogins());
                     JOptionPane.showMessageDialog(d, "Invalid password. Remaining attempts: " + rem);
                     return;
+                } else {
+                    a.resetFailedLogins();
+                    manager.save(DATA_FILE);
+                    currentAccount = a;
+                    d.dispose();
+                    showCustomerDashboard();
+                }
+            } catch (Exception ex) {
+                JOptionPane.showMessageDialog(d, "Authentication error: " + ex.getMessage());
+            }
+        });
+        cancel.addActionListener(e -> d.dispose());
+        btns.add(ok); btns.add(cancel);
+
+        d.add(form, BorderLayout.CENTER);
+        d.add(btns, BorderLayout.SOUTH);
+        d.setVisible(true);
+    }
+
+    private void showCustomerDashboard() {
+        cards.show(mainPanel, "customer");
+        // build dynamic panel with account info
+        JPanel p = (JPanel) mainPanel.getComponent(1); // customer card
+        CustomerPanel cp = (CustomerPanel) Arrays.stream(p.getComponents())
+                .filter(c -> c instanceof CustomerPanel).findFirst().orElse(null);
+        if (cp != null) cp.setAccount(currentAccount);
+    }
+
+    private JPanel buildCustomerPanel() {
+        JPanel wrap = new JPanel(new BorderLayout());
+        wrap.setBorder(new EmptyBorder(10,10,10,10));
+
+        CustomerPanel cp = new CustomerPanel();
+        wrap.add(cp, BorderLayout.CENTER);
+
+        JButton btnLogout = new JButton("Logout");
+        btnLogout.addActionListener(e -> {
+            currentAccount = null;
+            manager.save(DATA_FILE);
+            cards.show(mainPanel, "welcome");
+        });
+        JPanel south = new JPanel(new FlowLayout(FlowLayout.RIGHT));
+        south.add(btnLogout);
+        wrap.add(south, BorderLayout.SOUTH);
+
+        return wrap;
+    }
+
+    // inner CustomerPanel class to show account actions
+    private class CustomerPanel extends JPanel {
+        private JLabel lblAcc, lblName, lblBalance;
+        private JTable historyTable;
+        private HistoryTableModel htm;
+
+        public CustomerPanel() {
+            setLayout(new BorderLayout(10,10));
+            setBorder(new EmptyBorder(10,10,10,10));
+
+            JPanel top = new JPanel(new GridBagLayout());
+            GridBagConstraints gbc = new GridBagConstraints();
+            gbc.insets = new Insets(6,6,6,6);
+
+            lblAcc = new JLabel("Account: -");
+            lblAcc.setFont(new Font("SansSerif", Font.BOLD, 16));
+            lblName = new JLabel("Name: -");
+            lblBalance = new JLabel("Balance: -");
+            lblBalance.setFont(new Font("Monospaced", Font.BOLD, 14));
+
+            gbc.gridx=0; gbc.gridy=0; gbc.anchor=GridBagConstraints.WEST;
+            top.add(lblAcc, gbc);
+            gbc.gridx=1; top.add(lblName, gbc);
+            gbc.gridx=2; top.add(lblBalance, gbc);
+
+            JButton btnDeposit = new JButton("Deposit");
+            JButton btnWithdraw = new JButton("Withdraw");
+            JButton btnTransfer = new JButton("Transfer");
+            JButton btnMini = new JButton("Mini-Statement");
+            JButton btnExport = new JButton("Export CSV");
+            JButton btnChangePwd = new JButton("Change Password");
+
+            btnDeposit.addActionListener(e -> doDeposit());
+            btnWithdraw.addActionListener(e -> doWithdraw());
+            btnTransfer.addActionListener(e -> doTransfer());
+            btnMini.addActionListener(e -> showMiniStatement());
+            btnExport.addActionListener(e -> exportCSV());
+            btnChangePwd.addActionListener(e -> changePassword());
+
+            JPanel actions = new JPanel(new FlowLayout(FlowLayout.LEFT,8,8));
+            actions.add(btnDeposit); actions.add(btnWithdraw); actions.add(btnTransfer);
+            actions.add(btnMini); actions.add(btnExport); actions.add(btnChangePwd);
+
+            add(top, BorderLayout.NORTH);
+            add(actions, BorderLayout.CENTER);
+
+            htm = new HistoryTableModel(new ArrayList<>());
+            historyTable = new JTable(htm);
+            JScrollPane sp = new JScrollPane(historyTable);
+            sp.setPreferredSize(new Dimension(850, 280));
+            add(sp, BorderLayout.SOUTH);
+        }
 }
