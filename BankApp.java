@@ -258,4 +258,104 @@ public class BankApp {
             sp.setPreferredSize(new Dimension(850, 280));
             add(sp, BorderLayout.SOUTH);
         }
+
+        public void setAccount(Account a) {
+            this.lblAcc.setText("Account: " + a.getAccountNumber());
+            this.lblName.setText("Name: " + a.getHolderName());
+            this.lblBalance.setText("Balance: " + a.getBalance().toPlainString());
+            htm.setHistory(a.getHistory());
+        }
+
+        private void refresh() {
+            if (currentAccount != null) {
+                lblBalance.setText("Balance: " + currentAccount.getBalance().toPlainString());
+                htm.setHistory(currentAccount.getHistory());
+            }
+        }
+
+        private void doDeposit() {
+            String s = JOptionPane.showInputDialog(frame, "Enter deposit amount (supports k/M):", "Deposit", JOptionPane.PLAIN_MESSAGE);
+            if (s == null) return;
+            try {
+                BigDecimal amt = parseAmount(s);
+                if (amt.compareTo(BigDecimal.ZERO) <= 0) { JOptionPane.showMessageDialog(frame, "Amount must be positive."); return; }
+                boolean ok = currentAccount.deposit(amt);
+                if (ok) {
+                    manager.save(DATA_FILE);
+                    JOptionPane.showMessageDialog(frame, "Deposit successful.");
+                    refresh();
+                } else JOptionPane.showMessageDialog(frame, "Deposit failed.");
+            } catch (NumberFormatException ex) { JOptionPane.showMessageDialog(frame, "Invalid amount."); }
+        }
+
+        private void doWithdraw() {
+            String s = JOptionPane.showInputDialog(frame, "Enter withdrawal amount (supports k/M):", "Withdraw", JOptionPane.PLAIN_MESSAGE);
+            if (s == null) return;
+            try {
+                BigDecimal amt = parseAmount(s);
+                if (amt.compareTo(BigDecimal.ZERO) <= 0) { JOptionPane.showMessageDialog(frame, "Amount must be positive."); return; }
+                boolean ok = currentAccount.withdraw(amt);
+                if (ok) {
+                    manager.save(DATA_FILE);
+                    JOptionPane.showMessageDialog(frame, "Withdraw successful.");
+                    refresh();
+                } else JOptionPane.showMessageDialog(frame, "Insufficient funds or invalid amount.");
+            } catch (NumberFormatException ex) { JOptionPane.showMessageDialog(frame, "Invalid amount."); }
+        }
+
+        private void doTransfer() {
+            String target = JOptionPane.showInputDialog(frame, "Enter target account number:", "Transfer", JOptionPane.PLAIN_MESSAGE);
+            if (target == null) return;
+            if (manager.getAccount(target) == null) { JOptionPane.showMessageDialog(frame, "Target not found."); return; }
+            String s = JOptionPane.showInputDialog(frame, "Enter amount to transfer (supports k/M):", "Transfer", JOptionPane.PLAIN_MESSAGE);
+            if (s == null) return;
+            try {
+                BigDecimal amt = parseAmount(s);
+                if (amt.compareTo(BigDecimal.ZERO) <= 0) { JOptionPane.showMessageDialog(frame, "Amount must be positive."); return; }
+                int conf = JOptionPane.showConfirmDialog(frame, "Confirm transfer of " + amt.toPlainString() + " to " + target + "?", "Confirm", JOptionPane.YES_NO_OPTION);
+                if (conf != JOptionPane.YES_OPTION) return;
+                boolean ok = manager.transfer(currentAccount.getAccountNumber(), target, amt);
+                if (ok) {
+                    manager.save(DATA_FILE);
+                    JOptionPane.showMessageDialog(frame, "Transfer successful.");
+                    refresh();
+                } else JOptionPane.showMessageDialog(frame, "Transfer failed (insufficient funds or invalid).");
+            } catch (NumberFormatException ex) { JOptionPane.showMessageDialog(frame, "Invalid amount."); }
+        }
+
+        private void showMiniStatement() {
+            List<Transaction> hist = currentAccount.getHistory();
+            StringBuilder sb = new StringBuilder();
+            int start = Math.max(0, hist.size() - 10);
+            for (int i = hist.size()-1; i >= start; i--) {
+                sb.append(hist.get(i).toString()).append("\n");
+            }
+            JTextArea ta = new JTextArea(sb.toString());
+            ta.setEditable(false);
+            ta.setFont(new Font(Font.MONOSPACED, Font.PLAIN, 12));
+            JScrollPane sp = new JScrollPane(ta);
+            sp.setPreferredSize(new Dimension(800, 300));
+            JOptionPane.showMessageDialog(frame, sp, "Mini-Statement", JOptionPane.INFORMATION_MESSAGE);
+        }
+
+        private void exportCSV() {
+            JFileChooser fc = new JFileChooser();
+            fc.setDialogTitle("Export Statement CSV");
+            fc.setSelectedFile(new File("statement_" + currentAccount.getAccountNumber() + "_" +
+                    new SimpleDateFormat("yyyyMMddHHmmss").format(new Date()) + ".csv"));
+            int r = fc.showSaveDialog(frame);
+            if (r != JFileChooser.APPROVE_OPTION) return;
+            File f = fc.getSelectedFile();
+            try (PrintWriter pw = new PrintWriter(new FileWriter(f))) {
+                pw.println("TransactionID,Timestamp,Type,Amount,Note");
+                for (Transaction t : currentAccount.getHistory()) pw.println(t.toCSV());
+                JOptionPane.showMessageDialog(frame, "CSV exported to: " + f.getAbsolutePath());
+            } catch (IOException ex) {
+                JOptionPane.showMessageDialog(frame, "Failed to export CSV: " + ex.getMessage());
+            }
+        }
+
+        private void changePassword() {
+            JPasswordField cur = new JPasswordField();
+            JPasswordField np = new JPasswordField();
 }
