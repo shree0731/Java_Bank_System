@@ -358,4 +358,124 @@ public class BankApp {
         private void changePassword() {
             JPasswordField cur = new JPasswordField();
             JPasswordField np = new JPasswordField();
+            JPasswordField cp = new JPasswordField();
+            Object[] msg = {
+                    "Current password:", cur,
+                    "New password (min 8 chars incl digit & letter):", np,
+                    "Confirm new password:", cp
+            };
+            int ok = JOptionPane.showConfirmDialog(frame, msg, "Change Password", JOptionPane.OK_CANCEL_OPTION);
+            if (ok != JOptionPane.OK_OPTION) return;
+            char[] curc = cur.getPassword();
+            try {
+                if (!PasswordUtil.verifyPassword(curc, currentAccount.getSalt(), currentAccount.getPasswordHash())) {
+                    JOptionPane.showMessageDialog(frame, "Current password incorrect.");
+                    return;
+                }
+            } catch (Exception ex) { JOptionPane.showMessageDialog(frame, "Auth error."); return; }
+            char[] npc = np.getPassword(); char[] cpc = cp.getPassword();
+            String nps = new String(npc);
+            if (!nps.equals(new String(cpc))) { JOptionPane.showMessageDialog(frame, "Passwords do not match."); return; }
+            if (!isPasswordStrong(nps)) { JOptionPane.showMessageDialog(frame, "Password too weak."); return; }
+            try {
+                byte[] newSalt = PasswordUtil.generateSalt();
+                byte[] newHash = PasswordUtil.hashPassword(npc, newSalt);
+                currentAccount.setPasswordHashAndSalt(newHash, newSalt);
+                manager.save(DATA_FILE);
+                JOptionPane.showMessageDialog(frame, "Password changed successfully.");
+            } catch (Exception ex) { JOptionPane.showMessageDialog(frame, "Failed to set password: " + ex.getMessage()); }
+        }
+    }
+
+    /* -------------------------
+       CREATE ACCOUNT Panel
+       ------------------------- */
+    private JPanel buildCreatePanel() {
+        JPanel p = new JPanel(new GridBagLayout());
+        p.setBorder(new EmptyBorder(20,20,20,20));
+        GridBagConstraints gbc = new GridBagConstraints();
+        gbc.insets = new Insets(8,8,8,8);
+        gbc.gridx=0; gbc.gridy=0; gbc.anchor = GridBagConstraints.EAST;
+        p.add(new JLabel("Holder Name:"), gbc);
+        gbc.gridx=1; gbc.anchor = GridBagConstraints.WEST;
+        createNameField = new JTextField(18);
+        p.add(createNameField, gbc);
+
+        gbc.gridx=0; gbc.gridy=1; gbc.anchor=GridBagConstraints.EAST;
+        p.add(new JLabel("Password:"), gbc);
+        gbc.gridx=1; gbc.anchor=GridBagConstraints.WEST;
+        createPwdField = new JPasswordField(18);
+        p.add(createPwdField, gbc);
+
+        gbc.gridx=0; gbc.gridy=2; gbc.anchor=GridBagConstraints.EAST;
+        p.add(new JLabel("Confirm Password:"), gbc);
+        gbc.gridx=1; gbc.anchor=GridBagConstraints.WEST;
+        createPwdConfirmField = new JPasswordField(18);
+        p.add(createPwdConfirmField, gbc);
+
+        gbc.gridx=0; gbc.gridy=3; gbc.anchor=GridBagConstraints.EAST;
+        p.add(new JLabel("Initial Deposit (supports k/M):"), gbc);
+        gbc.gridx=1; gbc.anchor=GridBagConstraints.WEST;
+        createInitialField = new JTextField(12);
+        p.add(createInitialField, gbc);
+
+        JPanel btns = new JPanel(new FlowLayout(FlowLayout.RIGHT));
+        JButton btnCreate = new JButton("Create");
+        JButton btnBack = new JButton("Back");
+        btnCreate.addActionListener(e -> doCreateAccount());
+        btnBack.addActionListener(e -> cards.show(mainPanel, "welcome"));
+        btns.add(btnBack); btns.add(btnCreate);
+
+        gbc.gridx=0; gbc.gridy=4; gbc.gridwidth=2; gbc.anchor=GridBagConstraints.CENTER;
+        p.add(btns, gbc);
+
+        return p;
+    }
+
+    private void doCreateAccount() {
+        String name = createNameField.getText().trim();
+        String pwd = new String(createPwdField.getPassword());
+        String cp = new String(createPwdConfirmField.getPassword());
+        String init = createInitialField.getText().trim();
+        if (name.isEmpty()) { JOptionPane.showMessageDialog(frame, "Name cannot be empty."); return; }
+        if (!pwd.equals(cp)) { JOptionPane.showMessageDialog(frame, "Passwords do not match."); return; }
+        if (!isPasswordStrong(pwd)) { JOptionPane.showMessageDialog(frame, "Password too weak. Min 8 chars incl letter & digit."); return; }
+        try {
+            BigDecimal initial = parseAmount(init);
+            if (initial.compareTo(BigDecimal.ZERO) < 0) { JOptionPane.showMessageDialog(frame, "Initial cannot be negative."); return; }
+            String accNum = manager.createAccount(name, pwd, initial);
+            manager.save(DATA_FILE);
+            JOptionPane.showMessageDialog(frame, "Account created. Account Number: " + accNum);
+            // clear fields
+            createNameField.setText(""); createInitialField.setText("");
+            createPwdField.setText(""); createPwdConfirmField.setText("");
+            cards.show(mainPanel, "welcome");
+        } catch (NumberFormatException ex) {
+            JOptionPane.showMessageDialog(frame, "Invalid amount. Use numeric or suffix k/M.");
+        } catch (Exception ex) {
+            JOptionPane.showMessageDialog(frame, "Account creation failed: " + ex.getMessage());
+        }
+    }
+
+    /* -------------------------
+       ADMIN Login & Dashboard
+       ------------------------- */
+    private JPanel buildAdminLoginPanel() {
+        JPanel p = new JPanel(new GridBagLayout());
+        p.setBorder(new EmptyBorder(20,20,20,20));
+        GridBagConstraints gbc = new GridBagConstraints();
+        gbc.insets = new Insets(6,6,6,6);
+        gbc.gridx=0; gbc.gridy=0; gbc.anchor=GridBagConstraints.EAST;
+        p.add(new JLabel("Admin username:"), gbc);
+        gbc.gridx=1; gbc.anchor=GridBagConstraints.WEST;
+        adminUserField = new JTextField(12);
+        p.add(adminUserField, gbc);
+
+        gbc.gridx=0; gbc.gridy=1; gbc.anchor=GridBagConstraints.EAST;
+        p.add(new JLabel("Password:"), gbc);
+        gbc.gridx=1; gbc.anchor=GridBagConstraints.WEST;
+        adminPwdField = new JPasswordField(12);
+        p.add(adminPwdField, gbc);
+
+        JPanel btns = new JPanel(new FlowLayout(FlowLayout.RIGHT));
 }
