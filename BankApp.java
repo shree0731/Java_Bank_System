@@ -478,4 +478,104 @@ public class BankApp {
         p.add(adminPwdField, gbc);
 
         JPanel btns = new JPanel(new FlowLayout(FlowLayout.RIGHT));
+        JButton btnLogin = new JButton("Login");
+        JButton btnBack = new JButton("Back");
+        btnLogin.addActionListener(e -> doAdminLogin());
+        btnBack.addActionListener(e -> cards.show(mainPanel, "welcome"));
+        btns.add(btnBack); btns.add(btnLogin);
+
+        gbc.gridx=0; gbc.gridy=2; gbc.gridwidth=2; gbc.anchor=GridBagConstraints.CENTER;
+        p.add(btns, gbc);
+
+        return p;
+    }
+
+    private void doAdminLogin() {
+        String user = adminUserField.getText().trim();
+        char[] pwd = adminPwdField.getPassword();
+        if (!"admin".equalsIgnoreCase(user)) { JOptionPane.showMessageDialog(frame, "Unknown admin username."); return; }
+        Account admin = manager.getAccount("admin");
+        if (admin == null) { JOptionPane.showMessageDialog(frame, "Admin not configured."); return; }
+        try {
+            boolean ok = PasswordUtil.verifyPassword(pwd, admin.getSalt(), admin.getPasswordHash());
+            Arrays.fill(pwd, (char)0);
+            if (!ok) { JOptionPane.showMessageDialog(frame, "Invalid admin password."); return; }
+            // success
+            cards.show(mainPanel, "admin");
+            refreshAdminPanel();
+        } catch (Exception ex) {
+            JOptionPane.showMessageDialog(frame, "Auth error: " + ex.getMessage());
+        }
+    }
+
+    // admin panel UI
+    private AdminPanel adminPanelInstance;
+    private JPanel buildAdminPanel() {
+        adminPanelInstance = new AdminPanel();
+        return adminPanelInstance;
+    }
+
+    private void refreshAdminPanel() {
+        if (adminPanelInstance != null) adminPanelInstance.refresh();
+    }
+
+    private class AdminPanel extends JPanel {
+        private JTable accountsTable;
+        private AccountsTableModel atm;
+        private JTextArea detailsArea;
+
+        public AdminPanel() {
+            setLayout(new BorderLayout(10,10));
+            setBorder(new EmptyBorder(10,10,10,10));
+            JLabel title = new JLabel("Admin Dashboard");
+            title.setFont(new Font("SansSerif", Font.BOLD, 20));
+            add(title, BorderLayout.NORTH);
+
+            atm = new AccountsTableModel(new ArrayList<>());
+            accountsTable = new JTable(atm);
+            accountsTable.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
+            JScrollPane sp = new JScrollPane(accountsTable);
+            sp.setPreferredSize(new Dimension(400,350));
+            add(sp, BorderLayout.WEST);
+
+            detailsArea = new JTextArea();
+            detailsArea.setEditable(false);
+            JScrollPane dsp = new JScrollPane(detailsArea);
+            dsp.setPreferredSize(new Dimension(420,350));
+            add(dsp, BorderLayout.CENTER);
+
+            JPanel right = new JPanel(new GridLayout(6,1,6,6));
+            JButton btnCreate = new JButton("Create Account (Admin)");
+            JButton btnDelete = new JButton("Delete Account");
+            JButton btnUnlock = new JButton("Unlock Account");
+            JButton btnView = new JButton("View Statement");
+            JButton btnSummary = new JButton("Admin Summary");
+            JButton btnLogout = new JButton("Logout");
+
+            btnCreate.addActionListener(e -> createAccountAdmin());
+            btnDelete.addActionListener(e -> deleteSelected());
+            btnUnlock.addActionListener(e -> unlockSelected());
+            btnView.addActionListener(e -> viewSelectedStatement());
+            btnSummary.addActionListener(e -> showSummary());
+            btnLogout.addActionListener(e -> {
+                manager.save(DATA_FILE);
+                cards.show(mainPanel, "welcome");
+            });
+
+            JPanel rwrap = new JPanel(new BorderLayout());
+            rwrap.add(right, BorderLayout.NORTH);
+            right.add(btnCreate); right.add(btnDelete); right.add(btnUnlock);
+            right.add(btnView); right.add(btnSummary); right.add(btnLogout);
+            add(rwrap, BorderLayout.EAST);
+
+            accountsTable.getSelectionModel().addListSelectionListener(e -> {
+                int r = accountsTable.getSelectedRow();
+                if (r >= 0) {
+                    String acc = atm.getAccountNumberAt(r);
+                    Account a = manager.getAccount(acc);
+                    showAccountDetails(a);
+                }
+            });
+
+            refresh();
 }
