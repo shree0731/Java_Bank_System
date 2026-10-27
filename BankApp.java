@@ -578,4 +578,104 @@ public class BankApp {
             });
 
             refresh();
+        }
+
+        public void refresh() {
+            List<Account> list = manager.getAllAccounts().values().stream()
+                    .filter(a -> !"admin".equals(a.getAccountNumber()))
+                    .sorted(Comparator.comparing(Account::getAccountNumber))
+                    .collect(Collectors.toList());
+            atm.setAccounts(list);
+            detailsArea.setText("");
+        }
+
+        private void showAccountDetails(Account a) {
+            if (a == null) { detailsArea.setText(""); return; }
+            StringBuilder sb = new StringBuilder();
+            sb.append("Account: ").append(a.getAccountNumber()).append("\n");
+            sb.append("Holder: ").append(a.getHolderName()).append("\n");
+            sb.append("Balance: ").append(a.getBalance().toPlainString()).append("\n");
+            sb.append("Locked: ").append(a.isLocked()).append("\n");
+            sb.append("Failed logins: ").append(a.getFailedLogins()).append("\n\n");
+            sb.append("Last 10 transactions:\n");
+            List<Transaction> h = a.getHistory();
+            int start = Math.max(0, h.size() - 10);
+            for (int i = h.size()-1; i >= start; i--) sb.append(h.get(i)).append("\n");
+            detailsArea.setText(sb.toString());
+        }
+
+        private void createAccountAdmin() {
+            JTextField name = new JTextField();
+            JPasswordField pwd = new JPasswordField();
+            JPasswordField cp = new JPasswordField();
+            JTextField init = new JTextField("0");
+            Object[] msg = {
+                    "Holder name:", name,
+                    "Password (min 8 chars incl digit & letter):", pwd,
+                    "Confirm password:", cp,
+                    "Initial deposit (supports k/M):", init
+            };
+            int res = JOptionPane.showConfirmDialog(frame, msg, "Create Account (Admin)", JOptionPane.OK_CANCEL_OPTION);
+            if (res != JOptionPane.OK_OPTION) return;
+            String nm = name.getText().trim();
+            String p = new String(pwd.getPassword());
+            String c = new String(cp.getPassword());
+            if (nm.isEmpty()) { JOptionPane.showMessageDialog(frame, "Name cannot be empty."); return; }
+            if (!p.equals(c)) { JOptionPane.showMessageDialog(frame, "Passwords do not match."); return; }
+            if (!isPasswordStrong(p)) { JOptionPane.showMessageDialog(frame, "Password too weak."); return; }
+            try {
+                BigDecimal initial = parseAmount(init.getText().trim());
+                String acc = manager.createAccount(nm, p, initial);
+                manager.save(DATA_FILE);
+                JOptionPane.showMessageDialog(frame, "Account created: " + acc);
+                refresh();
+            } catch (Exception ex) {
+                JOptionPane.showMessageDialog(frame, "Create failed: " + ex.getMessage());
+            }
+        }
+
+        private void deleteSelected() {
+            int r = accountsTable.getSelectedRow();
+            if (r < 0) { JOptionPane.showMessageDialog(frame, "Select account first."); return; }
+            String acc = atm.getAccountNumberAt(r);
+            int c = JOptionPane.showConfirmDialog(frame, "Delete account " + acc + " ? This cannot be undone.", "Confirm", JOptionPane.YES_NO_OPTION);
+            if (c != JOptionPane.YES_OPTION) return;
+            boolean ok = manager.deleteAccount(acc);
+            if (ok) { manager.save(DATA_FILE); JOptionPane.showMessageDialog(frame, "Deleted."); refresh(); }
+            else JOptionPane.showMessageDialog(frame, "Delete failed.");
+        }
+
+        private void unlockSelected() {
+            int r = accountsTable.getSelectedRow();
+            if (r < 0) { JOptionPane.showMessageDialog(frame, "Select account first."); return; }
+            String acc = atm.getAccountNumberAt(r);
+            Account a = manager.getAccount(acc);
+            if (a == null) { JOptionPane.showMessageDialog(frame, "Account not found."); return; }
+            a.unlock();
+            manager.save(DATA_FILE);
+            JOptionPane.showMessageDialog(frame, "Unlocked.");
+            refresh();
+        }
+
+        private void viewSelectedStatement() {
+            int r = accountsTable.getSelectedRow();
+            if (r < 0) { JOptionPane.showMessageDialog(frame, "Select account first."); return; }
+            String acc = atm.getAccountNumberAt(r);
+            Account a = manager.getAccount(acc);
+            if (a == null) { JOptionPane.showMessageDialog(frame, "Account not found."); return; }
+            JTextArea ta = new JTextArea();
+            StringBuilder sb = new StringBuilder();
+            for (Transaction t : a.getHistory()) sb.append(t.toString()).append("\n");
+            ta.setText(sb.toString());
+            ta.setEditable(false);
+            ta.setFont(new Font(Font.MONOSPACED, Font.PLAIN, 12));
+            JScrollPane sp = new JScrollPane(ta);
+            sp.setPreferredSize(new Dimension(800,400));
+            JOptionPane.showMessageDialog(frame, sp, "Statement for " + acc, JOptionPane.INFORMATION_MESSAGE);
+        }
+
+        private void showSummary() {
+            int total = manager.totalAccounts();
+            BigDecimal funds = manager.totalFunds();
+            String msg = "Total customer accounts: " + total + "\nTotal funds: " + funds.toPlainString() + "\nNext account number: " + manager.nextAccountPeek();
 }
