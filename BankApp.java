@@ -678,4 +678,74 @@ public class BankApp {
             int total = manager.totalAccounts();
             BigDecimal funds = manager.totalFunds();
             String msg = "Total customer accounts: " + total + "\nTotal funds: " + funds.toPlainString() + "\nNext account number: " + manager.nextAccountPeek();
+            JOptionPane.showMessageDialog(frame, msg, "Admin Summary", JOptionPane.INFORMATION_MESSAGE);
+        }
+    }
+
+    /* -------------------------
+       Table Models & Helpers
+       ------------------------- */
+    private static class AccountsTableModel extends AbstractTableModel {
+        private final String[] cols = {"Account#", "Holder", "Balance", "Locked"};
+        private List<Account> accounts = new ArrayList<>();
+        public AccountsTableModel(List<Account> accounts) { setAccounts(accounts); }
+        public void setAccounts(List<Account> accounts) { this.accounts = new ArrayList<>(accounts); fireTableDataChanged(); }
+        public String getAccountNumberAt(int row) { return accounts.get(row).getAccountNumber(); }
+        public int getRowCount() { return accounts.size(); }
+        public int getColumnCount() { return cols.length; }
+        public String getColumnName(int c) { return cols[c]; }
+        public Object getValueAt(int r, int c) {
+            Account a = accounts.get(r);
+            switch (c) {
+                case 0: return a.getAccountNumber();
+                case 1: return a.getHolderName();
+                case 2: return a.getBalance().toPlainString();
+                case 3: return a.isLocked();
+                default: return "";
+            }
+        }
+    }
+
+    private static class HistoryTableModel extends AbstractTableModel {
+        private final String[] cols = {"Timestamp", "Type", "Amount", "Note"};
+        private List<Transaction> history = new ArrayList<>();
+        public HistoryTableModel(List<Transaction> history) { setHistory(history); }
+        public void setHistory(List<Transaction> history) {
+            this.history = new ArrayList<>(history);
+            Collections.reverse(this.history); // show latest first
+            fireTableDataChanged();
+        }
+        public int getRowCount() { return history.size(); }
+        public int getColumnCount() { return cols.length; }
+        public String getColumnName(int c) { return cols[c]; }
+        public Object getValueAt(int r, int c) {
+            Transaction t = history.get(r);
+            switch (c) {
+                case 0: return t.getTimestamp();
+                case 1: return t.getType();
+                case 2: return t.getAmount() == null ? "" : t.getAmount().toPlainString();
+                case 3: return t.getNote();
+                default: return "";
+            }
+        }
+    }
+
+    /* -------------------------
+       Utility & Parsers
+       ------------------------- */
+    // parse amounts like "20k", "1.5M", etc.
+    private BigDecimal parseAmount(String s) throws NumberFormatException {
+        if (s == null) throw new NumberFormatException("null");
+        s = s.trim().replace(",", "").toLowerCase();
+        if (s.endsWith("k") || s.endsWith("m")) {
+            char suffix = s.charAt(s.length() - 1);
+            String num = s.substring(0, s.length() - 1).trim();
+            BigDecimal base = new BigDecimal(num);
+            if (suffix == 'k') return base.multiply(new BigDecimal("1000"));
+            else return base.multiply(new BigDecimal("1000000"));
+        } else {
+            return new BigDecimal(s);
+        }
+    }
+
 }
