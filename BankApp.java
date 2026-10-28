@@ -748,4 +748,104 @@ public class BankApp {
         }
     }
 
+    private static boolean isPasswordStrong(String pwd) {
+        if (pwd == null) return false;
+        if (pwd.length() < 8) return false;
+        boolean hasDigit = false, hasLetter = false;
+        for (char c : pwd.toCharArray()) {
+            if (Character.isDigit(c)) hasDigit = true;
+            if (Character.isLetter(c)) hasLetter = true;
+        }
+        return hasDigit && hasLetter;
+    }
+
+    private void ensureSampleAccounts(AccountManager manager) {
+        if (manager.getAllAccounts().isEmpty()) {
+            try {
+                manager.createAccount("Alice", "alice123", new BigDecimal("5000"));
+                manager.createAccount("Bob", "bob456", new BigDecimal("3000"));
+                byte[] salt = PasswordUtil.generateSalt();
+                byte[] hash = PasswordUtil.hashPassword("adminpass".toCharArray(), salt);
+                manager.addAccount(new Account("admin", "Administrator", hash, salt, BigDecimal.ZERO));
+                manager.save(DATA_FILE);
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        }
+    }
+
+    /* -------------------------
+       MAIN
+       ------------------------- */
+    public static void main(String[] args) {
+        SwingUtilities.invokeLater(() -> new BankApp());
+    }
+
+    /* =========================
+       DOMAIN + UTIL CLASSES
+       (Account, Manager, Transaction, PasswordUtil)
+       All kept in same file for single-file convenience.
+       ========================= */
+
+    public static class Account implements Serializable {
+        private static final long serialVersionUID = 1L;
+        private final String accountNumber;
+        private final String holderName;
+        private byte[] passwordHash;
+        private byte[] salt;
+        private BigDecimal balance;
+        private final List<Transaction> history = new ArrayList<>();
+        private int failedLogins = 0;
+        private boolean locked = false;
+
+        public Account(String accountNumber, String holderName, byte[] passwordHash, byte[] salt, BigDecimal balance) {
+            this.accountNumber = accountNumber;
+            this.holderName = holderName;
+            this.passwordHash = passwordHash;
+            this.salt = salt;
+            this.balance = balance;
+            this.history.add(new Transaction("OPEN", balance, "Account opened"));
+        }
+
+        public String getAccountNumber() { return accountNumber; }
+        public String getHolderName() { return holderName; }
+        public synchronized BigDecimal getBalance() { return balance; }
+        public synchronized byte[] getSalt() { return salt; }
+        public synchronized byte[] getPasswordHash() { return passwordHash; }
+
+        public synchronized boolean deposit(BigDecimal amt) {
+            if (amt == null || amt.compareTo(BigDecimal.ZERO) <= 0) return false;
+            balance = balance.add(amt);
+            history.add(new Transaction("DEPOSIT", amt, "Deposit"));
+            return true;
+        }
+
+        public synchronized boolean withdraw(BigDecimal amt) {
+            if (amt == null || amt.compareTo(BigDecimal.ZERO) <= 0) return false;
+            if (balance.compareTo(amt) < 0) return false;
+            balance = balance.subtract(amt);
+            history.add(new Transaction("WITHDRAW", amt, "Withdraw"));
+            return true;
+        }
+
+        public synchronized boolean transferOut(BigDecimal amt, String toAcc) {
+            if (amt == null || amt.compareTo(BigDecimal.ZERO) <= 0) return false;
+            if (balance.compareTo(amt) < 0) return false;
+            balance = balance.subtract(amt);
+            history.add(new Transaction("TRANSFER_OUT", amt, "To: " + toAcc));
+            return true;
+        }
+
+        public synchronized void addTransferIn(BigDecimal amt, String fromAcc) {
+            balance = balance.add(amt);
+            history.add(new Transaction("TRANSFER_IN", amt, "From: " + fromAcc));
+        }
+
+        public synchronized List<Transaction> getHistory() {
+            return new ArrayList<>(history);
+        }
+
+        public synchronized int getFailedLogins() { return failedLogins; }
+        public synchronized void resetFailedLogins() { failedLogins = 0; }
+        public synchronized void incrementFailedLogins() {
 }
