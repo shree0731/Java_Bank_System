@@ -31,6 +31,7 @@ public class Account implements Serializable {
     public synchronized byte[] getSalt() { return salt; }
     public synchronized byte[] getPasswordHash() { return passwordHash; }
 
+    // Validation: ensure non-null and strictly positive amounts
     public synchronized boolean deposit(BigDecimal amt) {
         if (amt == null || amt.compareTo(BigDecimal.ZERO) <= 0) return false;
         balance = balance.add(amt);
