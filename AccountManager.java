@@ -1,4 +1,3 @@
-// AccountManager.java - Core state manager handling accounts, deadlock prevention, and persistence
 
 import java.io.*;
 import java.math.BigDecimal;
@@ -28,6 +27,7 @@ public class AccountManager implements Serializable {
         return accNum;
     }
 
+    // Safely removes an account from the system registry
     public synchronized boolean deleteAccount(String accNum) {
         return accounts.remove(accNum) != null;
     }
