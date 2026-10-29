@@ -27,7 +27,6 @@ public class AccountManager implements Serializable {
         return accNum;
     }
 
-    // Safely removes an account from the system registry
     public synchronized boolean deleteAccount(String accNum) {
         return accounts.remove(accNum) != null;
     }

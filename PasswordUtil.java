@@ -1,4 +1,3 @@
-// PasswordUtil.java - Cryptographic helper using PBKDF2 with HMAC-SHA256
 
 import java.security.NoSuchAlgorithmException;
 import java.security.SecureRandom;
